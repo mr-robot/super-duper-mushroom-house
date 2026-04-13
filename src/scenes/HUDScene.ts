@@ -27,7 +27,8 @@ export class HUDScene extends Phaser.Scene {
 
     tabs.forEach(tab => {
       const bg = this.add.rectangle(0, 0, 1, 1, 0x4a2d6e, 0.9)
-        .setStrokeStyle(2, 0x8866aa);
+        .setStrokeStyle(2, 0x8866aa)
+        .setInteractive({ useHandCursor: true });
       const text = this.add.text(0, 0, tab.label, {
         fontSize: '13px',
         color: '#ffffff',
@@ -35,12 +36,10 @@ export class HUDScene extends Phaser.Scene {
       }).setOrigin(0.5);
 
       const container = this.add.container(0, 0, [bg, text]);
-      container.setSize(1, 1);
-      container.setInteractive({ useHandCursor: true });
 
-      container.on('pointerover', () => bg.setFillStyle(0x6a4d8e, 0.9));
-      container.on('pointerout', () => bg.setFillStyle(0x4a2d6e, 0.9));
-      container.on('pointerdown', () => {
+      bg.on('pointerover', () => bg.setFillStyle(0x6a4d8e, 0.9));
+      bg.on('pointerout', () => bg.setFillStyle(0x4a2d6e, 0.9));
+      bg.on('pointerdown', () => {
         this.scene.get('UIScene').events.emit('open-tab', tab.key);
       });
 
@@ -55,19 +54,21 @@ export class HUDScene extends Phaser.Scene {
 
   private layoutHUD() {
     const w = this.scale.width;
-    const padding = 10;
-    const btnHeight = 36;
+    const pad = 12;
+    const btnHeight = 44;
     const gap = 6;
     const tabCount = this.tabContainers.length;
-    const btnWidth = (w - padding * 2 - gap * (tabCount - 1)) / tabCount;
-    const y = padding + btnHeight / 2;
+    const btnWidth = Math.floor((w - pad * 2 - gap * (tabCount - 1)) / tabCount);
 
-    this.moneyText.setPosition(padding, padding + 2);
+    // Money text: full width, top-left, stays below tabs
+    this.moneyText.setPosition(pad, 6);
+
+    // Tabs: row below money, full width
+    const tabsY = 34 + btnHeight / 2;
 
     this.tabContainers.forEach((tab, i) => {
-      const x = padding + i * (btnWidth + gap) + btnWidth / 2;
-      tab.container.setPosition(x, y);
-      tab.container.setSize(btnWidth, btnHeight);
+      const x = pad + i * (btnWidth + gap) + btnWidth / 2;
+      tab.container.setPosition(x, tabsY);
       tab.bg.setSize(btnWidth, btnHeight);
     });
   }

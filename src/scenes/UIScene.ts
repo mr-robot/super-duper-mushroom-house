@@ -86,7 +86,7 @@ export class UIScene extends Phaser.Scene {
     const h = this.scale.height;
     const pad = 12;
     const panelX = pad;
-    const panelY = 56;
+    const panelY = 84; // Below HUD tab row (tabs end at ~78)
     const panelW = w - pad * 2;
     const panelH = h - panelY - pad;
     const fontSize = w < 500 ? '10px' : '14px';
@@ -189,11 +189,13 @@ export class UIScene extends Phaser.Scene {
     this.contentContainer.add(sectionTitle);
 
     const paneY = startY + 22;
-    const slotW = Math.min(180, (l.panelW - l.pad * 2 - 20) / 2);
-    const slotH = 50;
-    const slotSpacing = l.panelW - l.pad * 2 - slotW * 2;
+    const isNarrow = l.w < 420;
+    const slotW = Math.min(180, (l.panelW - l.pad * 2 - 20) / (isNarrow ? 1 : 2));
+    const slotH = 44;
+    const slotSpacing = isNarrow ? 6 : (l.panelW - l.pad * 2 - slotW * 2);
     const slotAX = l.panelX + l.pad + slotW / 2;
-    const slotBX = slotAX + slotW + slotSpacing;
+    const slotBX = isNarrow ? slotAX : slotAX + slotW + slotSpacing;
+    const slotCenterX = l.cx;
 
     const slotAColor = this.selectedIngredientA ? 0x6a4d8e : 0x2a1d4e;
     const slotABg = this.add.rectangle(0, 0, slotW, slotH, slotAColor).setStrokeStyle(2, 0x8866aa);
@@ -204,7 +206,7 @@ export class UIScene extends Phaser.Scene {
     const slotA = this.add.container(slotAX, paneY + slotH / 2, [slotABg, slotALabel, slotAName]);
     this.contentContainer.add(slotA);
 
-    const plusText = this.add.text(l.cx, paneY + slotH / 2, '+', { fontSize: '20px', color: '#ffcc00', fontFamily: 'monospace' }).setOrigin(0.5);
+    const plusText = this.add.text(slotCenterX, paneY + slotH / 2, '+', { fontSize: '20px', color: '#ffcc00', fontFamily: 'monospace' }).setOrigin(0.5);
     this.contentContainer.add(plusText);
 
     const slotBColor = this.selectedIngredientB ? 0x6a4d8e : 0x2a1d4e;
@@ -213,15 +215,22 @@ export class UIScene extends Phaser.Scene {
     const slotBName = this.add.text(0, 5, this.selectedIngredientB ? (getIngredientById(this.selectedIngredientB)?.icon + ' ' + getIngredientById(this.selectedIngredientB)?.name) : '— empty —', {
       fontSize: l.smallFont, color: '#ffffff', fontFamily: 'monospace',
     }).setOrigin(0.5);
-    const slotB = this.add.container(slotBX, paneY + slotH / 2, [slotBBg, slotBLabel, slotBName]);
+    const slotBY = isNarrow ? paneY + slotH + 12 : paneY + slotH / 2;
+    const slotB = this.add.container(slotBX, slotBY, [slotBBg, slotBLabel, slotBName]);
     this.contentContainer.add(slotB);
+
+    if (isNarrow) {
+      plusText.setVisible(false);
+    }
 
     const equipY = paneY + slotH + 12;
     const ownedEquip = state.ownedEquipment;
     const eqSlotW = Math.min(200, l.panelW - l.pad * 2);
     const eqSlotH = 44;
+    const equipYAdjust = isNarrow ? 20 : 24;
+    const equipY2 = isNarrow ? paneY + slotH + 12 + slotH + 12 : equipY;
 
-    const eqLabel = this.add.text(l.panelX + l.pad, equipY, 'Equipment:', { fontSize: l.fontSize, color: '#ccbbff', fontFamily: 'monospace' });
+    const eqLabel = this.add.text(l.panelX + l.pad, equipY2, 'Equipment:', { fontSize: l.fontSize, color: '#ccbbff', fontFamily: 'monospace' });
     this.contentContainer.add(eqLabel);
 
     ownedEquip.forEach((eqId) => {
@@ -232,7 +241,7 @@ export class UIScene extends Phaser.Scene {
         .setStrokeStyle(isSelected ? 2 : 1, isSelected ? 0xffcc00 : 0x5544aa);
       const icon = this.add.text(-eqSlotW / 2 + 20, 0, eq.icon, { fontSize: '16px' });
       const nameTxt = this.add.text(10, 0, eq.name, { fontSize: l.smallFont, color: '#ffffff', fontFamily: 'monospace' });
-      const eqSlot = this.add.container(l.cx, equipY + 24 + eqSlotH / 2, [bg, icon, nameTxt]);
+      const eqSlot = this.add.container(l.cx, equipY2 + equipYAdjust + eqSlotH / 2, [bg, icon, nameTxt]);
       eqSlot.setSize(eqSlotW, eqSlotH);
       eqSlot.setInteractive({ useHandCursor: true });
       eqSlot.on('pointerdown', () => {
@@ -242,7 +251,7 @@ export class UIScene extends Phaser.Scene {
       this.contentContainer.add(eqSlot);
     });
 
-    const craftBtnY = equipY + eqSlotH + 36;
+    const craftBtnY = equipY2 + equipYAdjust + eqSlotH + (isNarrow ? 24 : 36);
     const canCraft = this.selectedIngredientA && this.selectedIngredientB && this.selectedEquipment && !this.isCrafting;
     const craftBtnW = Math.min(200, l.panelW - l.pad * 2);
 
