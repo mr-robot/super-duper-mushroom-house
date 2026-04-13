@@ -5,14 +5,17 @@ import { UIScene } from './scenes/UIScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: 400,
+  height: 700,
   backgroundColor: '#1a0e2e',
   parent: document.body,
   scene: [MainScene, HUDScene, UIScene],
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  input: {
+    touch: { capture: true },
   },
 };
 
