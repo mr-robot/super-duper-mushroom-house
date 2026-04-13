@@ -29,9 +29,11 @@ export class UIScene extends Phaser.Scene {
       .setStrokeStyle(2, 0x8866aa);
     this.panelContainer.add(this.tabBg);
 
-    const closeBg = this.add.rectangle(0, 0, 28, 28, 0xcc3333).setInteractive({ useHandCursor: true });
+    const closeBg = this.add.rectangle(0, 0, 28, 28, 0xcc3333);
     const closeTxt = this.add.text(0, 0, 'X', { fontSize: '14px', color: '#fff', fontFamily: 'monospace' }).setOrigin(0.5);
     this.closeBtn = this.add.container(400 + 760 / 2 - 20, 320 - 480 / 2 + 20, [closeBg, closeTxt]);
+    this.closeBtn.setSize(28, 28);
+    this.closeBtn.setInteractive({ useHandCursor: true });
     this.closeBtn.on('pointerdown', () => this.closePanel());
     this.panelContainer.add(this.closeBtn);
 
@@ -423,9 +425,11 @@ export class UIScene extends Phaser.Scene {
       this.contentContainer.add(card);
 
       if (hasItem) {
-        const sellBg = this.add.rectangle(280, 0, 80, 36, 0x33aa33).setStrokeStyle(1, 0x66ff66).setInteractive({ useHandCursor: true });
+        const sellBg = this.add.rectangle(280, 0, 80, 36, 0x33aa33).setStrokeStyle(1, 0x66ff66);
         const sellTxt = this.add.text(280, 0, 'SELL', { fontSize: '12px', color: '#ffffff', fontFamily: 'monospace' }).setOrigin(0.5);
         const sellBtn = this.add.container(0, 0, [sellBg, sellTxt]);
+        sellBtn.setSize(80, 36);
+        sellBtn.setInteractive({ useHandCursor: true });
         card.add(sellBtn);
         sellBtn.on('pointerdown', () => {
           removeIngredient(customer.requestedItemId, 1);
