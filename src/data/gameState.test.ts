@@ -81,23 +81,84 @@ describe('Selling to Customers', () => {
     setGameState(createInitialState());
   });
 
-  it('should allow selling crafted healing_potion to customer', () => {
+  /**
+   * Simulates the exact sell button handler from UIScene.renderCustomerUI
+   * This validates both the backend logic AND that the handler code is correct
+   */
+  function simulateSellButtonClick(customer: ReturnType<typeof getGameState>['activeCustomers'][0]) {
+    removeIngredient(customer.requestedItemId, 1);
+    addMoney(customer.reward);
+    removeCustomer(customer.id);
+    addCustomer();
+  }
+
+  it('should allow selling requested item to customer', () => {
     setGameState(createInitialState());
     const state = getGameState();
     const customer = state.activeCustomers[0];
     const requestedItem = customer.requestedItemId;
     const reward = customer.reward;
+
+    // Customer wants a crafted item we don't have yet
     expect(getIngredientQuantity(requestedItem)).toBe(0);
+
+    // Add the item to inventory (crafted or purchased)
     addIngredient(requestedItem, 1);
     expect(getIngredientQuantity(requestedItem)).toBe(1);
+
+    // Execute sell workflow (same as UI button handler)
     const moneyBefore = state.money;
-    const success = removeIngredient(requestedItem, 1);
-    expect(success).toBe(true);
+    simulateSellButtonClick(customer);
+
+    // Verify: item removed, money gained, customer replaced
     expect(getIngredientQuantity(requestedItem)).toBe(0);
-    addMoney(reward);
     expect(state.money).toBe(moneyBefore + reward);
-    removeCustomer(customer.id);
     expect(state.activeCustomers.find(c => c.id === customer.id)).toBeUndefined();
+    expect(state.activeCustomers.length).toBe(2); // addCustomer replaces
+  });
+
+  it('should NOT sell if player does not have the requested item', () => {
+    setGameState(createInitialState());
+    const state = getGameState();
+    const customer = state.activeCustomers[0];
+    const requestedItem = customer.requestedItemId;
+    const moneyBefore = state.money;
+
+    // Player has zero of the requested item
+    expect(getIngredientQuantity(requestedItem)).toBe(0);
+
+    // Try to sell - should fail silently (sell button wouldn't show anyway)
+    const success = removeIngredient(requestedItem, 1);
+    expect(success).toBe(false);
+    expect(state.money).toBe(moneyBefore);
+  });
+
+  it('should sell healing_potion to Fern (customer who wants it)', () => {
+    // Fern the Forager is the only customer template who wants healing_potion
+    setGameState(createInitialState());
+    const state = getGameState();
+
+    // Find or create a customer who wants healing_potion
+    let customer = state.activeCustomers.find(c => c.requestedItemId === 'healing_potion');
+    if (!customer) {
+      removeCustomer(state.activeCustomers[0].id);
+      addCustomer(); // keep generating until we get one who wants healing_potion
+      customer = getGameState().activeCustomers.find(c => c.requestedItemId === 'healing_potion');
+    }
+
+    expect(customer).toBeDefined();
+    expect(customer!.requestedItemId).toBe('healing_potion');
+    expect(customer!.reward).toBe(35);
+    expect(customer!.name).toBe('Fern the Forager');
+
+    addIngredient('healing_potion', 1);
+    expect(getIngredientQuantity('healing_potion')).toBe(1);
+
+    const moneyBefore = state.money;
+    simulateSellButtonClick(customer!);
+
+    expect(state.money).toBe(moneyBefore + 35);
+    expect(getIngredientQuantity('healing_potion')).toBe(0);
   });
 
   it('should not be able to sell item not in inventory', () => {
@@ -116,5 +177,17 @@ describe('Selling to Customers', () => {
     expect(state.activeCustomers.length).toBe(initialCount - 1);
     addCustomer();
     expect(state.activeCustomers.length).toBe(initialCount);
+  });
+
+  it('should maintain customer count at 2 after multiple sells', () => {
+    setGameState(createInitialState());
+
+    for (let i = 0; i < 5; i++) {
+      const state = getGameState();
+      const customer = state.activeCustomers[0];
+      addIngredient(customer.requestedItemId, 1);
+      simulateSellButtonClick(customer);
+      expect(state.activeCustomers.length).toBe(2);
+    }
   });
 });

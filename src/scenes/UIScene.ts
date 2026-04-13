@@ -425,9 +425,9 @@ export class UIScene extends Phaser.Scene {
       this.contentContainer.add(card);
 
       if (hasItem) {
-        const sellBg = this.add.rectangle(280, 0, 80, 36, 0x33aa33).setStrokeStyle(1, 0x66ff66);
-        const sellTxt = this.add.text(280, 0, 'SELL', { fontSize: '12px', color: '#ffffff', fontFamily: 'monospace' }).setOrigin(0.5);
-        const sellBtn = this.add.container(0, 0, [sellBg, sellTxt]);
+        const sellBg = this.add.rectangle(0, 0, 80, 36, 0x33aa33).setStrokeStyle(1, 0x66ff66);
+        const sellTxt = this.add.text(0, 0, 'SELL', { fontSize: '12px', color: '#ffffff', fontFamily: 'monospace' }).setOrigin(0.5);
+        const sellBtn = this.add.container(280, 0, [sellBg, sellTxt]); // Positioned at x=280 so hitbox aligns with visual
         sellBtn.setSize(80, 36);
         sellBtn.setInteractive({ useHandCursor: true });
         card.add(sellBtn);
