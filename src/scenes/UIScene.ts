@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { getGameState, addIngredient, removeIngredient, addMoney, removeCustomer, addCustomer, getIngredientQuantity } from '../data/gameState';
 import { INGREDIENTS, getIngredientById } from '../data/ingredients';
-import { RECIPES, findRecipe } from '../data/recipes';
+import { findRecipe } from '../data/recipes';
 import { getEquipmentById } from '../data/equipment';
 
 type TabKey = 'craft' | 'inventory' | 'shop' | 'customers' | null;
@@ -29,11 +29,9 @@ export class UIScene extends Phaser.Scene {
       .setStrokeStyle(2, 0x8866aa);
     this.panelContainer.add(this.tabBg);
 
-    const closeBg = this.add.rectangle(0, 0, 28, 28, 0xcc3333);
+    const closeBg = this.add.rectangle(0, 0, 28, 28, 0xcc3333).setInteractive({ useHandCursor: true });
     const closeTxt = this.add.text(0, 0, 'X', { fontSize: '14px', color: '#fff', fontFamily: 'monospace' }).setOrigin(0.5);
     this.closeBtn = this.add.container(400 + 760 / 2 - 20, 320 - 480 / 2 + 20, [closeBg, closeTxt]);
-    this.closeBtn.setSize(28, 28);
-    this.closeBtn.setInteractive({ useHandCursor: true });
     this.closeBtn.on('pointerdown', () => this.closePanel());
     this.panelContainer.add(this.closeBtn);
 
@@ -206,16 +204,6 @@ export class UIScene extends Phaser.Scene {
       if (canCraft) this.doCraft();
     });
     this.contentContainer.add(craftBtn);
-
-    const recipeHint = this.add.text(60, craftBtnY + 50, '💡 Recipes: ' + RECIPES.map(r => {
-      const a = getIngredientById(r.ingredientA);
-      const b = getIngredientById(r.ingredientB);
-      const res = getIngredientById(r.result);
-      return `${a?.icon}${a?.name} + ${b?.icon}${b?.name} → ${res?.icon}${res?.name}`;
-    }).join('  |  '), {
-      fontSize: '10px', color: '#887799', fontFamily: 'monospace', wordWrap: { width: 700 },
-    });
-    this.contentContainer.add(recipeHint);
   }
 
   private selectIngredient(ingredientId: string) {
@@ -435,12 +423,10 @@ export class UIScene extends Phaser.Scene {
       this.contentContainer.add(card);
 
       if (hasItem) {
-        const sellBg = this.add.rectangle(280, 0, 80, 36, 0x33aa33).setStrokeStyle(1, 0x66ff66);
+        const sellBg = this.add.rectangle(280, 0, 80, 36, 0x33aa33).setStrokeStyle(1, 0x66ff66).setInteractive({ useHandCursor: true });
         const sellTxt = this.add.text(280, 0, 'SELL', { fontSize: '12px', color: '#ffffff', fontFamily: 'monospace' }).setOrigin(0.5);
         const sellBtn = this.add.container(0, 0, [sellBg, sellTxt]);
         card.add(sellBtn);
-        sellBtn.setSize(80, 36);
-        sellBtn.setInteractive({ useHandCursor: true });
         sellBtn.on('pointerdown', () => {
           removeIngredient(customer.requestedItemId, 1);
           addMoney(customer.reward);
