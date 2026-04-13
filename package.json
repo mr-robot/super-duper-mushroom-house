@@ -1,27 +1,25 @@
 {
-  "name": "nextjs-template",
+  "name": "mushroom-craft",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
   },
   "dependencies": {
-    "next": "^16.1.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "phaser": "^3.87.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "@types/node": "^24.10.2",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@tailwindcss/postcss": "^4.1.17",
-    "tailwindcss": "^4.1.17",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.0.0"
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/parser": "^8.34.0"
   }
 }
