@@ -3,6 +3,7 @@ import { getGameState, addIngredient, removeIngredient, addMoney, removeCustomer
 import { INGREDIENTS, getIngredientById } from '../data/ingredients';
 import { RECIPES, findRecipe } from '../data/recipes';
 import { getEquipmentById } from '../data/equipment';
+import { getCustomerRemainingTime } from '../data/customers';
 
 type TabKey = 'craft' | 'inventory' | 'shop' | 'customers' | 'recipes' | null;
 
@@ -29,6 +30,7 @@ export class UIScene extends Phaser.Scene {
   private contentContainer!: Phaser.GameObjects.Container;
   private tabBg!: Phaser.GameObjects.Rectangle;
   private closeBtn!: Phaser.GameObjects.Container;
+  private customerTimerTexts: Phaser.GameObjects.Text[] = [];
 
   private selectedIngredientA: string | null = null;
   private selectedIngredientB: string | null = null;
@@ -79,7 +81,33 @@ export class UIScene extends Phaser.Scene {
       }
     });
 
+    this.time.addEvent({
+      delay: 1000,
+      callback: this.updateCustomerTimers,
+      callbackScope: this,
+      loop: true,
+    });
+
     this.layoutPanel();
+  }
+
+  private updateCustomerTimers() {
+    if (this.currentTab !== 'customers') return;
+    const state = getGameState();
+    this.customerTimerTexts.forEach((txt, i) => {
+      if (state.activeCustomers[i]) {
+        const remaining = getCustomerRemainingTime(state.activeCustomers[i]);
+        const seconds = Math.ceil(remaining / 1000);
+        txt.setText(`⏱ ${seconds}s`);
+        if (remaining < 10000) {
+          txt.setColor('#ff6666');
+        } else if (remaining < 20000) {
+          txt.setColor('#ffaa66');
+        } else {
+          txt.setColor('#66ff66');
+        }
+      }
+    });
   }
 
   private getLayout(): Layout {
@@ -444,6 +472,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   private renderCustomerUI() {
+    this.customerTimerTexts = [];
     const state = getGameState();
     const l = this.getLayout();
     const baseY = l.panelY + 30;
@@ -492,8 +521,13 @@ export class UIScene extends Phaser.Scene {
       const rewardTxt = this.add.text(-cardW / 2 + 70, cardH * 0.2, `Reward: ${customer.reward}g`, {
         fontSize: '8px', color: '#ffcc00', fontFamily: 'monospace',
       });
+      const remaining = getCustomerRemainingTime(customer);
+      const timerTxt = this.add.text(cardW / 2 - 50, 0, `⏱ ${Math.ceil(remaining / 1000)}s`, {
+        fontSize: '12px', color: remaining < 10000 ? '#ff6666' : remaining < 20000 ? '#ffaa66' : '#66ff66', fontFamily: 'monospace',
+      }).setOrigin(0.5);
+      this.customerTimerTexts.push(timerTxt);
 
-      const card = this.add.container(cardX, y, [bg, portrait, nameTxt, wantTxt, rewardTxt]);
+      const card = this.add.container(cardX, y, [bg, portrait, nameTxt, wantTxt, rewardTxt, timerTxt]);
       this.contentContainer.add(card);
 
       if (hasItem) {

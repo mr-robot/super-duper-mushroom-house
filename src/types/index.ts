@@ -34,6 +34,8 @@ export interface Customer {
   requestedItemId: string;
   reward: number;
   patience: number;
+  durationMs: number;
+  startTimeMs: number;
 }
 
 export interface InventorySlot {
