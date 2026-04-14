@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
-import { getGameState, addIngredient, removeIngredient, addMoney, removeCustomer, addCustomer, getIngredientQuantity } from '../data/gameState';
+import { getGameState, addIngredient, removeIngredient, addMoney, removeCustomer, addCustomer, getIngredientQuantity, discoverRecipe, isRecipeDiscovered } from '../data/gameState';
 import { INGREDIENTS, getIngredientById } from '../data/ingredients';
-import { findRecipe } from '../data/recipes';
+import { RECIPES, findRecipe } from '../data/recipes';
 import { getEquipmentById } from '../data/equipment';
 
-type TabKey = 'craft' | 'inventory' | 'shop' | 'customers' | null;
+type TabKey = 'craft' | 'inventory' | 'shop' | 'customers' | 'recipes' | null;
 
 interface Layout {
   w: number;
@@ -74,6 +74,7 @@ export class UIScene extends Phaser.Scene {
           case 'inventory': this.renderInventoryUI(); break;
           case 'shop': this.renderShopUI(); break;
           case 'customers': this.renderCustomerUI(); break;
+          case 'recipes': this.renderRecipesUI(); break;
         }
       }
     });
@@ -118,6 +119,7 @@ export class UIScene extends Phaser.Scene {
       case 'inventory': this.renderInventoryUI(); break;
       case 'shop': this.renderShopUI(); break;
       case 'customers': this.renderCustomerUI(); break;
+      case 'recipes': this.renderRecipesUI(); break;
     }
   }
 
@@ -317,6 +319,7 @@ export class UIScene extends Phaser.Scene {
       removeIngredient(this.selectedIngredientA!, 1);
       removeIngredient(this.selectedIngredientB!, 1);
       addIngredient(recipe.result, 1);
+      discoverRecipe(recipe.id);
 
       const result = getIngredientById(recipe.result);
       this.isCrafting = false;
@@ -514,6 +517,48 @@ export class UIScene extends Phaser.Scene {
         const needTxt = this.add.text(cardW / 2 - 50, 0, 'Need item', { fontSize: '8px', color: '#ff6666', fontFamily: 'monospace' }).setOrigin(0.5);
         card.add(needTxt);
       }
+    });
+  }
+
+  private renderRecipesUI() {
+    const l = this.getLayout();
+    const baseY = l.panelY + 30;
+
+    const title = this.add.text(l.cx, baseY, '📜 Recipes', {
+      fontSize: l.titleFont, color: '#ffcc00', fontFamily: 'monospace',
+    }).setOrigin(0.5);
+    this.contentContainer.add(title);
+
+    const discoveredRecipes = RECIPES.filter(r => isRecipeDiscovered(r.id));
+
+    if (discoveredRecipes.length === 0) {
+      const empty = this.add.text(l.cx, l.panelY + l.panelH / 2, 'No recipes discovered yet!\nCraft items to discover recipes.', {
+        fontSize: l.fontSize, color: '#777799', fontFamily: 'monospace', align: 'center',
+      }).setOrigin(0.5);
+      this.contentContainer.add(empty);
+      return;
+    }
+
+    const gridStartY = baseY + 40;
+    const recipeCardW = Math.min(280, l.panelW - l.pad * 2);
+    const recipeCardH = 80;
+
+    discoveredRecipes.forEach((recipe, i) => {
+      const y = gridStartY + i * (recipeCardH + 10);
+      const ingA = getIngredientById(recipe.ingredientA);
+      const ingB = getIngredientById(recipe.ingredientB);
+      const result = getIngredientById(recipe.result);
+      const equip = getEquipmentById(recipe.equipment);
+
+      const bg = this.add.rectangle(l.cx, y, recipeCardW, recipeCardH, 0x3a2d5e).setStrokeStyle(1, 0x5544aa);
+
+      const resultIcon = this.add.text(l.cx - recipeCardW / 2 + 30, y, result?.icon || '?', { fontSize: '24px' }).setOrigin(0.5);
+      const resultName = this.add.text(l.cx - recipeCardW / 2 + 60, y - 15, recipe.name, { fontSize: l.fontSize, color: '#ffffff', fontFamily: 'monospace' });
+      const ingredientsText = this.add.text(l.cx - recipeCardW / 2 + 60, y + 5, `${ingA?.icon || '?'} + ${ingB?.icon || '?'}`, { fontSize: l.smallFont, color: '#ccbbff', fontFamily: 'monospace' });
+      const craftInfo = this.add.text(l.cx - recipeCardW / 2 + 60, y + 22, `${equip?.icon || '?'} • ${recipe.craftTime / 1000}s`, { fontSize: '8px', color: '#aaaacc', fontFamily: 'monospace' });
+
+      const recipeCard = this.add.container(0, y, [bg, resultIcon, resultName, ingredientsText, craftInfo]);
+      this.contentContainer.add(recipeCard);
     });
   }
 }

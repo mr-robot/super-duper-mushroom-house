@@ -46,4 +46,5 @@ export interface GameState {
   inventory: InventorySlot[];
   ownedEquipment: string[];
   activeCustomers: Customer[];
+  discoveredRecipes: string[];
 }

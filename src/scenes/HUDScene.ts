@@ -22,6 +22,7 @@ export class HUDScene extends Phaser.Scene {
       { label: 'Craft', key: 'craft' },
       { label: 'Inventory', key: 'inventory' },
       { label: 'Shop', key: 'shop' },
+      { label: 'Recipes', key: 'recipes' },
       { label: 'Customers', key: 'customers' },
     ];
 

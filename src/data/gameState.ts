@@ -19,6 +19,7 @@ export function createInitialState(): GameState {
     inventory: startingInventory,
     ownedEquipment: [EQUIPMENT[0].id],
     activeCustomers: startingCustomers,
+    discoveredRecipes: [],
   };
 }
 
@@ -74,4 +75,18 @@ export function addCustomer(): void {
 
 export function removeCustomer(customerId: string): void {
   state.activeCustomers = state.activeCustomers.filter(c => c.id !== customerId);
+}
+
+export function discoverRecipe(recipeId: string): void {
+  if (!state.discoveredRecipes.includes(recipeId)) {
+    state.discoveredRecipes.push(recipeId);
+  }
+}
+
+export function isRecipeDiscovered(recipeId: string): boolean {
+  return state.discoveredRecipes.includes(recipeId);
+}
+
+export function getDiscoveredRecipes(): string[] {
+  return [...state.discoveredRecipes];
 }
