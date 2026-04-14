@@ -10,9 +10,11 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#1a0e2e',
   parent: document.body,
   scene: [MainScene, HUDScene, UIScene],
+  pixelArt: true,
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    zoom: Phaser.Scale.MAX_ZOOM,
   },
   input: {
     touch: { capture: true },

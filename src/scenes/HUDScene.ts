@@ -28,7 +28,7 @@ export class HUDScene extends Phaser.Scene {
     tabs.forEach(tab => {
       const bg = this.add.rectangle(0, 0, 1, 1, 0x4a2d6e, 0.9)
         .setStrokeStyle(2, 0x8866aa)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive({ useHandCursor: true, pixelPerfect: true });
       const text = this.add.text(0, 0, tab.label, {
         fontSize: '13px',
         color: '#ffffff',
