@@ -1,87 +1,47 @@
-# Active Context: Next.js Starter Template
+# Active Context: Mushroom Craft (Potion Mixer Game)
 
 ## Current State
 
-**Template Status**: ✅ Ready for development
-
-The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. It's ready for AI-assisted expansion to build any type of application.
+**Project**: Mushroom Craft - A Phaser 3 potion-crafting game with customer management
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
+- [x] localStorage persistence for game state (auto-save on state changes)
+- [x] `resetGameState()` function to clear saved state
+- [x] Settings button in HUD (top-right gear icon)
+- [x] Settings menu UI with reset button
+- [x] localStorage persistence tests with mocked localStorage
+- [x] Graceful handling when localStorage is undefined (SSR safety)
 
 ## Current Structure
 
-| File/Directory | Purpose | Status |
-|----------------|---------|--------|
-| `src/app/page.tsx` | Home page | ✅ Ready |
-| `src/app/layout.tsx` | Root layout | ✅ Ready |
-| `src/app/globals.css` | Global styles | ✅ Ready |
-| `.kilocode/` | AI context & recipes | ✅ Ready |
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/data/gameState.ts` | Game state management with localStorage | ✅ |
+| `src/scenes/HUDScene.ts` | HUD with money, timer, tabs, settings button | ✅ |
+| `src/scenes/UIScene.ts` | UI panels (craft, inventory, shop, customers, recipes, settings) | ✅ |
 
-## Current Focus
+## Key Functions (gameState.ts)
 
-The template is ready. Next steps depend on user requirements:
+- `loadState()` / `saveState()` - localStorage operations with error handling
+- `getGameState()` / `setGameState()` - state access
+- `addIngredient()`, `removeIngredient()`, `addMoney()`, `removeMoney()` - inventory/money management
+- `addCustomer()`, `removeCustomer()`, `discoverRecipe()` - game mechanics
+- `resetGameState()` - clears localStorage and resets to initial state
 
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
+## Settings Menu
 
-## Quick Start Guide
-
-### To add a new page:
-
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
-```
-
-### To add components:
-
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
-
-### To add a database:
-
-Follow `.kilocode/recipes/add-database.md`
-
-### To add API routes:
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
+- Opens via ⚙️ button in HUD
+- Contains "Reset Game" button that calls `resetGameState()` and closes panel
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
-| Initial | Template created with base setup |
+| Initial | Base Phaser game with crafting and customers |
+| Today | localStorage persistence, settings menu with reset |
+
+## Pending Improvements
+
+- [ ] Add visual feedback when game saves
+- [ ] Consider debouncing saves for frequent changes
