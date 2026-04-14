@@ -50,7 +50,7 @@ export class UIScene extends Phaser.Scene {
     const closeTxt = this.add.text(0, 0, 'X', { fontSize: '14px', color: '#fff', fontFamily: 'monospace' }).setOrigin(0.5);
     this.closeBtn = this.add.container(0, 0, [closeBg, closeTxt]);
     this.closeBtn.setSize(28, 28);
-    this.closeBtn.setInteractive({ useHandCursor: true, pixelPerfect: true });
+    this.closeBtn.setInteractive({ useHandCursor: true });
     this.closeBtn.on('pointerdown', () => this.closePanel());
     this.panelContainer.add(this.closeBtn);
 
@@ -243,7 +243,7 @@ export class UIScene extends Phaser.Scene {
       const nameTxt = this.add.text(10, 0, eq.name, { fontSize: l.smallFont, color: '#ffffff', fontFamily: 'monospace' });
       const eqSlot = this.add.container(l.cx, equipY2 + equipYAdjust + eqSlotH / 2, [bg, icon, nameTxt]);
       eqSlot.setSize(eqSlotW, eqSlotH);
-      eqSlot.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      eqSlot.setInteractive({ useHandCursor: true });
       eqSlot.on('pointerdown', () => {
         this.selectedEquipment = this.selectedEquipment === eqId ? null : eqId;
         this.refreshCraftingUI();
@@ -262,7 +262,7 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     const craftBtn = this.add.container(l.cx, craftBtnY, [craftBg, craftText]);
     craftBtn.setSize(craftBtnW, 44);
-    craftBtn.setInteractive({ useHandCursor: true, pixelPerfect: true });
+    craftBtn.setInteractive({ useHandCursor: true });
 
     if (canCraft) {
       craftBtn.on('pointerover', () => craftBg.setFillStyle(0x44bb44));
@@ -418,7 +418,7 @@ export class UIScene extends Phaser.Scene {
       cell.setSize(shopCellW, shopCellH);
 
       if (canAfford) {
-      cell.setInteractive({ useHandCursor: true, pixelPerfect: true });
+        cell.setInteractive({ useHandCursor: true });
         cell.on('pointerover', () => bg.setFillStyle(0x4a3d6e));
         cell.on('pointerout', () => bg.setFillStyle(0x3a2d5e));
         cell.on('pointerdown', () => {
@@ -460,7 +460,7 @@ export class UIScene extends Phaser.Scene {
       const refreshTxt = this.add.text(0, 0, '🔄 New Customers', { fontSize: l.smallFont, color: '#ffffff', fontFamily: 'monospace' }).setOrigin(0.5);
       const refresh = this.add.container(l.cx, l.panelY + l.panelH / 2 + 50, [refreshBtnBg, refreshTxt]);
       refresh.setSize(160, 40);
-      refresh.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      refresh.setInteractive({ useHandCursor: true });
       refresh.on('pointerdown', () => {
         addCustomer();
         addCustomer();
@@ -499,7 +499,7 @@ export class UIScene extends Phaser.Scene {
         const sellTxt = this.add.text(0, 0, 'SELL', { fontSize: l.smallFont, color: '#ffffff', fontFamily: 'monospace' }).setOrigin(0.5);
         const sellBtn = this.add.container(sellBtnX, 0, [sellBg, sellTxt]);
         sellBtn.setSize(80, 34);
-        sellBtn.setInteractive({ useHandCursor: true, pixelPerfect: true });
+        sellBtn.setInteractive({ useHandCursor: true });
         card.add(sellBtn);
         sellBtn.on('pointerdown', () => {
           removeIngredient(customer.requestedItemId, 1);
