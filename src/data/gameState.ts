@@ -27,6 +27,9 @@ export function createInitialState(): GameState {
 
 function loadState(): GameState {
   try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return createInitialState();
+    }
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       return JSON.parse(saved) as GameState;
@@ -39,6 +42,9 @@ function loadState(): GameState {
 
 function saveState(state: GameState): void {
   try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return;
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     console.warn('Failed to save game state to localStorage:', e);
@@ -122,6 +128,8 @@ export function getDiscoveredRecipes(): string[] {
 }
 
 export function resetGameState(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  if (typeof localStorage !== 'undefined' && localStorage !== null) {
+    localStorage.removeItem(STORAGE_KEY);
+  }
   state = createInitialState();
 }

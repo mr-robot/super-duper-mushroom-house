@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
-import { getGameState, addIngredient, removeIngredient, addMoney, removeCustomer, addCustomer, getIngredientQuantity, discoverRecipe, isRecipeDiscovered } from '../data/gameState';
+import { getGameState, addIngredient, removeIngredient, addMoney, removeCustomer, addCustomer, getIngredientQuantity, discoverRecipe, isRecipeDiscovered, resetGameState } from '../data/gameState';
 import { INGREDIENTS, getIngredientById } from '../data/ingredients';
 import { RECIPES, findRecipe } from '../data/recipes';
 import { getEquipmentById } from '../data/equipment';
 import { getCustomerRemainingTime } from '../data/customers';
 
-type TabKey = 'craft' | 'inventory' | 'shop' | 'customers' | 'recipes' | null;
+type TabKey = 'craft' | 'inventory' | 'shop' | 'customers' | 'recipes' | 'settings' | null;
 
 interface Layout {
   w: number;
@@ -77,6 +77,7 @@ export class UIScene extends Phaser.Scene {
           case 'shop': this.renderShopUI(); break;
           case 'customers': this.renderCustomerUI(); break;
           case 'recipes': this.renderRecipesUI(); break;
+          case 'settings': this.renderSettingsUI(); break;
         }
       }
     });
@@ -148,6 +149,7 @@ export class UIScene extends Phaser.Scene {
       case 'shop': this.renderShopUI(); break;
       case 'customers': this.renderCustomerUI(); break;
       case 'recipes': this.renderRecipesUI(); break;
+      case 'settings': this.renderSettingsUI(); break;
     }
   }
 
@@ -155,6 +157,38 @@ export class UIScene extends Phaser.Scene {
     this.currentTab = null;
     this.panelContainer.setVisible(false);
     this.contentContainer.removeAll(true);
+  }
+
+  private renderSettingsUI() {
+    const l = this.getLayout();
+    const baseY = l.panelY + 30;
+
+    const title = this.add.text(l.cx, baseY, '⚙️ Settings', {
+      fontSize: l.titleFont, color: '#ffcc00', fontFamily: 'monospace',
+    }).setOrigin(0.5);
+    this.contentContainer.add(title);
+
+    const btnY = baseY + 50;
+    const btnW = Math.min(200, l.panelW - l.pad * 2);
+    const btnH = 44;
+
+    const resetBg = this.add.rectangle(l.cx, btnY, btnW, btnH, 0xaa3333)
+      .setStrokeStyle(2, 0xff5555);
+    const resetText = this.add.text(l.cx, btnY, '🔄 Reset Game', {
+      fontSize: '16px', color: '#ffffff', fontFamily: 'monospace',
+    }).setOrigin(0.5);
+    const resetBtn = this.add.container(l.cx, btnY, [resetBg, resetText]);
+    resetBtn.setSize(btnW, btnH);
+    resetBtn.setInteractive({ useHandCursor: true });
+
+    resetBtn.on('pointerover', () => resetBg.setFillStyle(0xcc4444));
+    resetBtn.on('pointerout', () => resetBg.setFillStyle(0xaa3333));
+    resetBtn.on('pointerdown', () => {
+      resetGameState();
+      this.scene.get('HUDScene').events.emit('state-changed');
+      this.closePanel();
+    });
+    this.contentContainer.add(resetBtn);
   }
 
   private emitStateChanged() {

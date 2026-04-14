@@ -94,6 +94,20 @@ export class HUDScene extends Phaser.Scene {
       tab.container.setPosition(x, tabsY);
       tab.bg.setSize(btnWidth, btnHeight);
     });
+
+    const settingsBtnX = w - 50;
+    const settingsBg = this.add.rectangle(settingsBtnX, 6 + 12, 36, 24, 0x4a2d6e, 0.9)
+      .setStrokeStyle(1, 0x8866aa)
+      .setInteractive({ useHandCursor: true });
+    this.add.text(settingsBtnX, 6 + 12, '⚙️', {
+      fontSize: '14px',
+      fontFamily: 'monospace',
+    }).setOrigin(0.5);
+    settingsBg.on('pointerover', () => settingsBg.setFillStyle(0x6a4d8e, 0.9));
+    settingsBg.on('pointerout', () => settingsBg.setFillStyle(0x4a2d6e, 0.9));
+    settingsBg.on('pointerdown', () => {
+      this.scene.get('UIScene').events.emit('open-tab', 'settings');
+    });
   }
 
   updateHUD() {

@@ -1,8 +1,26 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { INGREDIENTS, getIngredientById } from '../data/ingredients';
 import { findRecipe } from '../data/recipes';
 import { EQUIPMENT } from '../data/equipment';
-import { createInitialState, getGameState, setGameState, addIngredient, removeIngredient, addMoney, removeCustomer, addCustomer, getIngredientQuantity } from '../data/gameState';
+import { createInitialState, getGameState, setGameState, addIngredient, removeIngredient, addMoney, removeMoney, removeCustomer, addCustomer, getIngredientQuantity, discoverRecipe, resetGameState } from '../data/gameState';
+
+const STORAGE_KEY = 'potion-mixer-game-state';
+
+const store: Record<string, string> = {};
+const localStorageMock = {
+  getItem: vi.fn((key: string) => store[key] ?? null),
+  setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
+  removeItem: vi.fn((key: string) => { delete store[key]; }),
+  clear: vi.fn(() => { Object.keys(store).forEach(k => delete store[k]); }),
+};
+
+beforeEach(() => {
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+    configurable: true,
+  });
+});
 
 describe('Ingredients', () => {
   it('should have 10 ingredients', () => {
@@ -189,5 +207,132 @@ describe('Selling to Customers', () => {
       simulateSellButtonClick(customer);
       expect(state.activeCustomers.length).toBe(2);
     }
+  });
+});
+
+describe('localStorage Persistence', () => {
+  beforeEach(() => {
+    store[STORAGE_KEY] = '';
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+    localStorageMock.removeItem.mockClear();
+    resetGameState();
+  });
+
+  it('should save state to localStorage when setGameState is called', () => {
+    const state = createInitialState();
+    setGameState(state);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(STORAGE_KEY, JSON.stringify(state));
+  });
+
+  it('should load state from localStorage when setGameState loads from storage', () => {
+    const savedState = createInitialState();
+    savedState.money = 999;
+    store[STORAGE_KEY] = JSON.stringify(savedState);
+    setGameState(savedState);
+    expect(getGameState().money).toBe(999);
+    const saved = JSON.parse(store[STORAGE_KEY]);
+    expect(saved.money).toBe(999);
+  });
+
+  it('should return initial state when localStorage is empty', () => {
+    resetGameState();
+    expect(getGameState().money).toBe(50);
+  });
+
+  it('should save after addIngredient', () => {
+    const before = getGameState().inventory.find(s => s.ingredientId === 'healing_potion');
+    addIngredient('healing_potion', 5);
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+    const saved = JSON.parse(store[STORAGE_KEY]);
+    const slot = saved.inventory.find((s: { ingredientId: string; quantity: number }) => s.ingredientId === 'healing_potion');
+    expect(slot?.quantity).toBe((before?.quantity || 0) + 5);
+  });
+
+  it('should save after removeIngredient', () => {
+    addIngredient('red_cap', 5);
+    localStorageMock.setItem.mockClear();
+    removeIngredient('red_cap', 1);
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+  });
+
+  it('should save after addMoney', () => {
+    addMoney(100);
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+    const saved = JSON.parse(store[STORAGE_KEY]);
+    expect(saved.money).toBe(150);
+  });
+
+  it('should save after removeMoney', () => {
+    removeMoney(10);
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+    const saved = JSON.parse(store[STORAGE_KEY]);
+    expect(saved.money).toBe(40);
+  });
+
+  it('should save after addCustomer', () => {
+    addCustomer();
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+  });
+
+  it('should save after removeCustomer', () => {
+    const customers = getGameState().activeCustomers;
+    removeCustomer(customers[0].id);
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+  });
+
+  it('should save after discoverRecipe', () => {
+    discoverRecipe('healing_potion');
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+    const saved = JSON.parse(store[STORAGE_KEY]);
+    expect(saved.discoveredRecipes).toContain('healing_potion');
+  });
+
+  it('should not save when removeMoney fails due to insufficient funds', () => {
+    const initialMoney = getGameState().money;
+    const success = removeMoney(initialMoney + 999);
+    expect(success).toBe(false);
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+  });
+
+  it('should not save when removeIngredient fails due to insufficient quantity', () => {
+    const success = removeIngredient('nonexistent_ingredient', 1);
+    expect(success).toBe(false);
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+  });
+
+  it('should not save when addCustomer is at max capacity', () => {
+    while (getGameState().activeCustomers.length < 4) {
+      addCustomer();
+    }
+    localStorageMock.setItem.mockClear();
+    addCustomer();
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+  });
+
+  it('should reset game state and clear localStorage', () => {
+    addMoney(100);
+    discoverRecipe('healing_potion');
+    localStorageMock.removeItem.mockClear();
+    resetGameState();
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
+    expect(getGameState().money).toBe(50);
+  });
+
+  it('should handle corrupted localStorage gracefully', () => {
+    store[STORAGE_KEY] = 'invalid-json{{';
+    resetGameState();
+    expect(getGameState().money).toBe(50);
+  });
+
+  it('should handle localStoragegetItem throwing', () => {
+    localStorageMock.getItem.mockImplementationOnce(() => { throw new Error('storage error'); });
+    resetGameState();
+    expect(getGameState().money).toBe(50);
+  });
+
+  it('should handle localStoragesetItem throwing', () => {
+    localStorageMock.setItem.mockImplementationOnce(() => { throw new Error('storage error'); });
+    expect(() => addMoney(10)).not.toThrow();
   });
 });
