@@ -10,10 +10,35 @@ const TIME_CALIBRATION = {
   DEFAULT_SPEED: 1,
 };
 
-let gameTime: GameTime = {
-  elapsedMs: 0,
-  isPaused: false,
-};
+const TIME_STORAGE_KEY = 'potion-mixer-game-time';
+
+function loadTime(): GameTime {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return createGameTime();
+    }
+    const saved = localStorage.getItem(TIME_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved) as GameTime;
+    }
+  } catch (e) {
+    console.warn('Failed to load game time from localStorage:', e);
+  }
+  return createGameTime();
+}
+
+function saveTime(time: GameTime): void {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return;
+    }
+    localStorage.setItem(TIME_STORAGE_KEY, JSON.stringify(time));
+  } catch (e) {
+    console.warn('Failed to save game time to localStorage:', e);
+  }
+}
+
+let gameTime: GameTime = loadTime();
 
 let gameSpeed: number = TIME_CALIBRATION.DEFAULT_SPEED;
 
@@ -31,6 +56,9 @@ export function getGameTime(): GameTime {
 export function resetGameTime(): void {
   gameTime = createGameTime();
   gameSpeed = TIME_CALIBRATION.DEFAULT_SPEED;
+  if (typeof localStorage !== 'undefined' && localStorage !== null) {
+    localStorage.removeItem(TIME_STORAGE_KEY);
+  }
 }
 
 export function tickGameTime(deltaMs: number): void {
@@ -40,10 +68,12 @@ export function tickGameTime(deltaMs: number): void {
 
 export function pauseGameTime(): void {
   gameTime.isPaused = true;
+  saveTime(gameTime);
 }
 
 export function resumeGameTime(): void {
   gameTime.isPaused = false;
+  saveTime(gameTime);
 }
 
 export function setGameSpeed(speed: number): void {
@@ -51,10 +81,16 @@ export function setGameSpeed(speed: number): void {
     TIME_CALIBRATION.SPEED_MULTIPLIER_MIN,
     Math.min(speed, TIME_CALIBRATION.SPEED_MULTIPLIER_MAX)
   );
+  saveTime(gameTime);
 }
 
 export function getGameSpeed(): number {
   return gameSpeed;
+}
+
+export function reloadTime(): GameTime {
+  gameTime = loadTime();
+  return gameTime;
 }
 
 export function formatGameTime(ms: number): string {

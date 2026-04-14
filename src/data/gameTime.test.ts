@@ -1,5 +1,72 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getGameTime, resetGameTime, setGameSpeed, getGameSpeed, formatGameTime } from './gameTime';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { getGameTime, resetGameTime, setGameSpeed, getGameSpeed, formatGameTime, pauseGameTime, resumeGameTime, reloadTime } from './gameTime';
+
+const TIME_STORAGE_KEY = 'potion-mixer-game-time';
+
+const store: Record<string, string> = {};
+const localStorageMock = {
+  getItem: vi.fn((key: string) => store[key] ?? null),
+  setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
+  removeItem: vi.fn((key: string) => { delete store[key]; }),
+  clear: vi.fn(() => { Object.keys(store).forEach(k => delete store[k]); }),
+};
+
+beforeEach(() => {
+  store[TIME_STORAGE_KEY] = '';
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+    configurable: true,
+  });
+  localStorageMock.getItem.mockClear();
+  localStorageMock.setItem.mockClear();
+  localStorageMock.removeItem.mockClear();
+  resetGameTime();
+});
+
+describe('GameTime localStorage Persistence', () => {
+  it('should save time to localStorage when paused', () => {
+    pauseGameTime();
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(TIME_STORAGE_KEY, expect.any(String));
+  });
+
+  it('should save time to localStorage when resumed', () => {
+    resumeGameTime();
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+  });
+
+  it('should save time to localStorage when speed is changed', () => {
+    setGameSpeed(2);
+    expect(localStorageMock.setItem).toHaveBeenCalled();
+  });
+
+  it('should load time from localStorage on init', () => {
+    const savedTime = { elapsedMs: 5000, isPaused: true };
+    store[TIME_STORAGE_KEY] = JSON.stringify(savedTime);
+    const time = reloadTime();
+    expect(time.elapsedMs).toBe(5000);
+    expect(time.isPaused).toBe(true);
+  });
+
+  it('should reset time and clear localStorage when resetGameTime is called', () => {
+    store[TIME_STORAGE_KEY] = JSON.stringify({ elapsedMs: 9999, isPaused: false });
+    localStorageMock.removeItem.mockClear();
+    resetGameTime();
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith(TIME_STORAGE_KEY);
+    expect(getGameTime().elapsedMs).toBe(0);
+  });
+
+  it('should handle corrupted localStorage gracefully', () => {
+    store[TIME_STORAGE_KEY] = 'invalid-json{{';
+    resetGameTime();
+    expect(getGameTime().elapsedMs).toBe(0);
+  });
+
+  it('should handle localStorage errors gracefully', () => {
+    localStorageMock.getItem.mockImplementationOnce(() => { throw new Error('storage error'); });
+    expect(() => resetGameTime()).not.toThrow();
+  });
+});
 
 describe('GameTime', () => {
   beforeEach(() => {

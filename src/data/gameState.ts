@@ -2,6 +2,7 @@ import { GameState, InventorySlot, Customer } from '../types';
 import { INGREDIENTS } from './ingredients';
 import { EQUIPMENT } from './equipment';
 import { generateCustomer } from './customers';
+import { resetGameTime } from './gameTime';
 
 const STORAGE_KEY = 'potion-mixer-game-state';
 
@@ -132,4 +133,5 @@ export function resetGameState(): void {
     localStorage.removeItem(STORAGE_KEY);
   }
   state = createInitialState();
+  resetGameTime();
 }
