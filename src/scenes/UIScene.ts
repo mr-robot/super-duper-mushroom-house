@@ -539,26 +539,47 @@ export class UIScene extends Phaser.Scene {
       return;
     }
 
-    const gridStartY = baseY + 40;
-    const recipeCardW = Math.min(280, l.panelW - l.pad * 2);
-    const recipeCardH = 80;
+    const scrollY = baseY + 40;
+    const scrollH = l.panelH - (scrollY - l.panelY) - l.pad;
+    const recipeCardW = l.panelW - l.pad * 2;
+    const recipeCardH = 50;
+    const recipeSpacing = 4;
+
+    const scrollContainer = this.add.container(0, scrollY);
 
     discoveredRecipes.forEach((recipe, i) => {
-      const y = gridStartY + i * (recipeCardH + 10);
+      const y = i * (recipeCardH + recipeSpacing);
       const ingA = getIngredientById(recipe.ingredientA);
       const ingB = getIngredientById(recipe.ingredientB);
       const result = getIngredientById(recipe.result);
       const equip = getEquipmentById(recipe.equipment);
 
-      const bg = this.add.rectangle(l.cx, y, recipeCardW, recipeCardH, 0x3a2d5e).setStrokeStyle(1, 0x5544aa);
+      const bg = this.add.rectangle(l.pad + recipeCardW / 2, y + recipeCardH / 2, recipeCardW, recipeCardH, 0x3a2d5e).setStrokeStyle(1, 0x5544aa);
 
-      const resultIcon = this.add.text(l.cx - recipeCardW / 2 + 30, y, result?.icon || '?', { fontSize: '24px' }).setOrigin(0.5);
-      const resultName = this.add.text(l.cx - recipeCardW / 2 + 60, y - 15, recipe.name, { fontSize: l.fontSize, color: '#ffffff', fontFamily: 'monospace' });
-      const ingredientsText = this.add.text(l.cx - recipeCardW / 2 + 60, y + 5, `${ingA?.icon || '?'} + ${ingB?.icon || '?'}`, { fontSize: l.smallFont, color: '#ccbbff', fontFamily: 'monospace' });
-      const craftInfo = this.add.text(l.cx - recipeCardW / 2 + 60, y + 22, `${equip?.icon || '?'} • ${recipe.craftTime / 1000}s`, { fontSize: '8px', color: '#aaaacc', fontFamily: 'monospace' });
+      const resultIcon = this.add.text(l.pad + 30, y + recipeCardH / 2, result?.icon || '?', { fontSize: '20px' }).setOrigin(0.5);
+      const resultName = this.add.text(l.pad + 55, y + recipeCardH / 2 - 8, recipe.name, { fontSize: l.fontSize, color: '#ffffff', fontFamily: 'monospace' });
+      const ingredientsText = this.add.text(l.pad + 55, y + recipeCardH / 2 + 8, `${ingA?.icon || '?'} + ${ingB?.icon || '?'} + ${equip?.icon || '?'}`, { fontSize: l.smallFont, color: '#ccbbff', fontFamily: 'monospace' });
 
-      const recipeCard = this.add.container(0, y, [bg, resultIcon, resultName, ingredientsText, craftInfo]);
-      this.contentContainer.add(recipeCard);
+      const recipeCard = this.add.container(0, y, [bg, resultIcon, resultName, ingredientsText]);
+      scrollContainer.add(recipeCard);
     });
+
+    const totalHeight = discoveredRecipes.length * (recipeCardH + recipeSpacing);
+    const needsScroll = totalHeight > scrollH;
+
+    if (needsScroll) {
+      const mask = this.add.graphics().fillStyle(0x000000).fillRect(l.pad, scrollY, recipeCardW, scrollH);
+      scrollContainer.setMask(mask.createGeometryMask());
+      this.contentContainer.add(mask);
+
+      let scrollOffset = 0;
+      this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gameObjects: Phaser.GameObjects.GameObject[], _deltaX: number, deltaY: number) => {
+        const maxScroll = Math.max(0, totalHeight - scrollH);
+        scrollOffset = Phaser.Math.Clamp(scrollOffset + deltaY * 0.5, 0, maxScroll);
+        scrollContainer.setPosition(0, scrollY - scrollOffset);
+      });
+    }
+
+    this.contentContainer.add(scrollContainer);
   }
 }
