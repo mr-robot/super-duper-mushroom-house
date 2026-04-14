@@ -522,7 +522,7 @@ export class UIScene extends Phaser.Scene {
         fontSize: '8px', color: '#ffcc00', fontFamily: 'monospace',
       });
       const remaining = getCustomerRemainingTime(customer);
-      const timerTxt = this.add.text(cardW / 2 - 50, 0, `⏱ ${Math.ceil(remaining / 1000)}s`, {
+      const timerTxt = this.add.text(-50, cardH * 0.35, `⏱ ${Math.ceil(remaining / 1000)}s`, {
         fontSize: '12px', color: remaining < 10000 ? '#ff6666' : remaining < 20000 ? '#ffaa66' : '#66ff66', fontFamily: 'monospace',
       }).setOrigin(0.5);
       this.customerTimerTexts.push(timerTxt);
