@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { getGameState } from '../data/gameState';
+import { tickGameTime, getGameTime, formatGameTime } from '../data/gameTime';
 
 export class HUDScene extends Phaser.Scene {
   private moneyText!: Phaser.GameObjects.Text;
+  private timerText!: Phaser.GameObjects.Text;
   private tabContainers: { key: string; container: Phaser.GameObjects.Container; bg: Phaser.GameObjects.Rectangle }[] = [];
 
   constructor() {
@@ -13,6 +15,14 @@ export class HUDScene extends Phaser.Scene {
     this.moneyText = this.add.text(0, 0, '', {
       fontSize: '16px',
       color: '#ffcc00',
+      fontFamily: 'monospace',
+      stroke: '#000000',
+      strokeThickness: 3,
+    });
+
+    this.timerText = this.add.text(0, 0, '⏱ 00:00', {
+      fontSize: '16px',
+      color: '#aaaaff',
       fontFamily: 'monospace',
       stroke: '#000000',
       strokeThickness: 3,
@@ -51,6 +61,19 @@ export class HUDScene extends Phaser.Scene {
     this.updateHUD();
     this.scene.get('UIScene').events.on('state-changed', this.updateHUD, this);
     this.scale.on('resize', () => this.layoutHUD());
+
+    this.time.addEvent({
+      delay: 100,
+      callback: this.updateTimer,
+      callbackScope: this,
+      loop: true,
+    });
+  }
+
+  private updateTimer() {
+    tickGameTime(100);
+    const time = getGameTime();
+    this.timerText.setText(`⏱ ${formatGameTime(time.elapsedMs)}`);
   }
 
   private layoutHUD() {
@@ -61,10 +84,9 @@ export class HUDScene extends Phaser.Scene {
     const tabCount = this.tabContainers.length;
     const btnWidth = Math.floor((w - pad * 2 - gap * (tabCount - 1)) / tabCount);
 
-    // Money text: full width, top-left, stays below tabs
     this.moneyText.setPosition(pad, 6);
+    this.timerText.setPosition(w - 80, 6);
 
-    // Tabs: row below money, full width
     const tabsY = 34 + btnHeight / 2;
 
     this.tabContainers.forEach((tab, i) => {
